@@ -1,0 +1,47 @@
+AjaxValidation
+==============
+
+This is a basic extension to provide inline AJAX powered validation of your models it is currently
+a very early version so there are a number of assumptions.
+
+* It assumes that your model/controller are singular/plural post/posts
+* It assumes you are using the form_for helper
+
+Example
+--------------
+In routes.rb add the following, this extra action allows us to validate the model
+
+  map.resources :posts, :collection => [:validate]
+
+In your controller add the following
+
+class PostsController < ApplicationController
+  ajax_validation_for :post
+  ...
+end
+
+Lets take a look at an example view, the new.rhtml. As you can see we are using a custom form builder 
+ajax_validation_form_for, this will generate some html around the form elements. A number of elements will have
+to be defined manually however, their html should looks something like the user_id field. Note the id specified
+in the form_for, is referenced in the call to observe_form. 
+
+If ordered list forms aren't your taste, it's not to hard to override the form builder to produce something different.
+There is an example css file that will help as a starter.
+
+
+<h1>New Post</h1>
+<%= error_messages_for :post %>
+<%- ajax_validation_form_for(:post, :url => posts_url, :html => {:id => "post_form"}) do |f| -%>
+  <%= f.text_field :title %>        
+  <%= f.text_area :body %>
+  <li id="post_user_id_item">
+      <label for="post_user_id">Author<span class="hint"></span></label>
+      <%= f.collection_select :user_id, @users, :id, :display_name %>
+      <span id="post_user_id_validation"></span>
+  </li>
+  <%= f.datetime_select :published_at %>   
+  <%= f.date_select :expires_on %>   
+  <%= f.check_box :live %>
+  <%= submit_tag "Create" %>
+<%- end -%>
+<%= observe_form :post_form, :url => validate_posts_path, :frequency => 2 %>
